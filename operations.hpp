@@ -49,7 +49,7 @@ namespace mizu {
 		void* halt(opcode* pc, uint64_t* registers, uint8_t* stack, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
-	#ifdef MIZU_NO_THREADS
+	#ifdef MIZU_NO_HARDWARE_THREADS
 			mizu::coroutine::get_current_context().program_counter = nullptr; // Mark the coroutine context as done!
 	#endif
 			return nullptr;	
