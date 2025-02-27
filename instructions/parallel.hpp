@@ -12,20 +12,20 @@
 #endif
 
 namespace mizu {
-	// NOTE: Not a valid operation
+	// NOTE: Not a valid instruction
 	inline uint64_t new_thread(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp) {
 #ifndef MIZU_NO_HARDWARE_THREADS
 		registers_and_stack env;
 		std::copy(registers, registers + memory_size, env.memory.data());
 
 		return (uint64_t)new std::thread([pc, env = std::move(env)]() mutable {
-			setup_enviornment(env);
+			setup_environment(env);
 			return pc->op(pc, env.memory.data(), env.stack_boundary, env.stack_pointer);
 		});
 #else // MIZU_NO_HARDWARE_THREADS
 		auto env = (registers_and_stack*)malloc(sizeof(registers_and_stack));
 		std::copy(registers, registers + memory_size, env->memory.data());
-		setup_enviornment(*env);
+		setup_environment(*env);
 		mizu::coroutine::start(pc, env);
 		return fpda_size(mizu::coroutine::contexts) - 1; // Return the index of the thread in the context
 #endif // MIZU_NO_HARDWARE_THREADS
@@ -48,7 +48,7 @@ namespace mizu {
 	extern void delay(std::chrono::microseconds time);
 #endif
 
-	inline namespace operations { extern "C" {
+	inline namespace instructions { extern "C" {
 
 		// Interpret register as signed
 		void* fork_relative(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
@@ -61,7 +61,7 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(fork_relative);
+		MIZU_REGISTER_INSTRUCTION(fork_relative);
 
 		// Interpret arguments as signed
 		void* fork_relative_immediate(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
@@ -74,7 +74,7 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(fork_relative_immediate);
+		MIZU_REGISTER_INSTRUCTION(fork_relative_immediate);
 
 		void* fork_to(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
@@ -86,7 +86,7 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(fork_to);
+		MIZU_REGISTER_INSTRUCTION(fork_to);
 
 		void* join_thread(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
@@ -102,7 +102,7 @@ namespace mizu {
 			size_t context_id = (size_t&)registers[pc->a];
 			if(context_id) { // Can't join the main thread!
 				if(!mizu::coroutine::get_context(context_id).done())
-					// If the thread in question is not done yet, back up the program counter (aka queue this same operation up to be run next)
+					// If the thread in question is not done yet, back up the program counter (aka queue this same instruction up to be run next)
 					--pc;
 				else registers[pc->a] = 0;
 			}
@@ -112,7 +112,7 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(join_thread);
+		MIZU_REGISTER_INSTRUCTION(join_thread);
 
 		void* sleep_microseconds(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
@@ -124,7 +124,7 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(sleep_microseconds);
+		MIZU_REGISTER_INSTRUCTION(sleep_microseconds);
 
 		void* channel_create(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
@@ -141,7 +141,7 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(channel_create);
+		MIZU_REGISTER_INSTRUCTION(channel_create);
 
 		void* channel_close(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
@@ -161,9 +161,9 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(channel_close);
+		MIZU_REGISTER_INSTRUCTION(channel_close);
 
-		void* channel_recieve(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+		void* channel_receive(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
 	#ifndef MIZU_NO_HARDWARE_THREADS
@@ -174,7 +174,7 @@ namespace mizu {
 			auto channel = fp::dynarray<uint64_t>((uint64_t*)registers[pc->a]);
 			// if(!channel) MIZU_THROW(std::runtime_error("Channel does not exist."));
 			if(channel.empty()) {
-				// If there is nothing to recieve, nudge back the program counter
+				// If there is nothing to receive, nudge back the program counter
 				--pc;
 			} else registers[pc->out] = channel.pop_front();
 	#endif // MIZU_NO_HARDWARE_THREADS
@@ -183,7 +183,7 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(channel_recieve);
+		MIZU_REGISTER_INSTRUCTION(channel_receive);
 
 		void* channel_send(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
@@ -205,6 +205,6 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(channel_send);
+		MIZU_REGISTER_INSTRUCTION(channel_send);
 	}}
 }

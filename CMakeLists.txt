@@ -7,6 +7,8 @@ if(MIZU_ENABLE_FFI)
 endif()
 option(MIZU_NO_EXCEPTIONS "When enabled Mizu is built without exceptions" OFF)
 option(MIZU_BUILD_TESTS "Weather or not the test app should be built" ${PROJECT_IS_TOP_LEVEL})
+option(MIZU_BUILD_DOCS "Weather or not the documentation should be built" OFF)
+set(MIZU_STACK_SIZE 8.0 CACHE STRING "Size in Kilobytes of Mizu's stack")
 
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
 
@@ -45,6 +47,7 @@ endif()
 
 add_library(mizu_vm INTERFACE)
 target_include_directories(mizu_vm INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+target_compile_definitions(mizu_vm INTERFACE MIZU_STACK_SIZE=${MIZU_STACK_SIZE})
 if(MIZU_ENABLE_FFI AND MIZU_ENABLE_LIB_FFI)
 	target_link_libraries(mizu_vm INTERFACE ffi_static)
 elseif(MIZU_ENABLE_FFI)
@@ -85,4 +88,21 @@ if(MIZU_BUILD_TESTS)
 	target_link_libraries(tst PUBLIC mizu::vm)
 
 	add_library(tst_load SHARED tests/shared.cpp)
+endif()
+
+if(MIZU_BUILD_DOCS)
+	find_package(Doxygen)
+	set(Sphinx_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+	find_package(Sphinx REQUIRED breathe)
+
+	set(DOXYGEN_GENERATE_HTML NO)
+	set(DOXYGEN_GENERATE_XML YES)
+	configure_file(Doxyfile Doxyfile.mizu_doxygen)
+	doxygen_add_docs(mizu_doxygen CONFIG_FILE ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile.mizu_doxygen)
+
+	sphinx_add_docs(
+		mizu_sphinx
+		BREATHE_PROJECTS mizu_doxygen
+		BUILDER html
+		SOURCE_DIRECTORY docs)
 endif()

@@ -4,7 +4,7 @@
 #include <fp/pointer.h>
 
 namespace mizu::unsafe {
-	inline namespace operations { extern "C" {
+	inline namespace instructions { extern "C" {
 
 		// out = pointer, a = size in bytes
 		void* allocate(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
@@ -17,7 +17,7 @@ namespace mizu::unsafe {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(allocate);
+		MIZU_REGISTER_INSTRUCTION(allocate);
 
 		// a = pointer to free, b = value to overwrite a with (default zero)
 		void* free_allocated(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
@@ -31,7 +31,7 @@ namespace mizu::unsafe {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(free_allocated);
+		MIZU_REGISTER_INSTRUCTION(free_allocated);
 
 
 		// out = pointer, a = type size in bytes, b = count
@@ -46,7 +46,7 @@ namespace mizu::unsafe {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(allocate_fat_pointer);
+		MIZU_REGISTER_INSTRUCTION(allocate_fat_pointer);
 
 		// a = pointer to free, b = value to overwrite a with (default zero)
 		void* free_fat_pointer(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
@@ -60,7 +60,7 @@ namespace mizu::unsafe {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(free_fat_pointer);
+		MIZU_REGISTER_INSTRUCTION(free_fat_pointer);
 
 		// out = pointer, a = stack offset (signed)
 		void* pointer_to_stack(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
@@ -73,7 +73,7 @@ namespace mizu::unsafe {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(pointer_to_stack);
+		MIZU_REGISTER_INSTRUCTION(pointer_to_stack);
 
 		// out = pointer, a = register
 		void* pointer_to_register(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
@@ -85,7 +85,7 @@ namespace mizu::unsafe {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(pointer_to_register);
+		MIZU_REGISTER_INSTRUCTION(pointer_to_register);
 
 		// out = destination pointer, a = source pointer, b = size in bytes
 		void* copy_memory(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
@@ -100,6 +100,6 @@ namespace mizu::unsafe {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(copy_memory);
+		MIZU_REGISTER_INSTRUCTION(copy_memory);
 	}}
 }
