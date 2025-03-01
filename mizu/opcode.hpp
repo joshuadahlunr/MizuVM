@@ -133,6 +133,11 @@ namespace mizu {
 			execution_context ctx{program_counter - 1, enviornment->stack_pointer, enviornment};
 			fpda_push_back(contexts, ctx);
 		}
+		
+		static void clear() {
+			if(contexts) fpda_free_and_null(contexts);
+			current_context = 0;
+		}
 
 		static bool done() { // TODO: There has to be a better way to write this!
 			fp_iterate_named(contexts, context)
@@ -151,6 +156,7 @@ namespace mizu {
 			mizu::coroutine::get_current_context().program_counter, mizu::coroutine::get_current_context().enviornment->memory.data(),\
 			mizu::coroutine::get_current_context().enviornment->stack_boundary, mizu::coroutine::get_current_context().stack_pointer)\
 		) && !mizu::coroutine::done());\
+		mizu::coroutine::clear();\
 		return result;\
 	}(const_cast<mizu::opcode*>(program), &env)
 
