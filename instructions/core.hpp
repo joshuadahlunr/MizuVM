@@ -6,7 +6,14 @@
 
 namespace mizu {
 
-	constexpr uint32_t label2int(const fp_string_view label) {
+	/**
+	 * Converts a string label to an immediate value
+	 * @note Only the first 4 characters of the label are relevant.
+	 * 
+	 * @param label string_view to be converted
+	 * @return constexpr uint32_t the immediate
+	 */
+	constexpr uint32_t label2immediate(const fp_string_view label) {
 		size_t length = fp_string_view_length(label);
 		if(length > sizeof(uint32_t)) return *fp_view_data(uint32_t, label);
 
@@ -15,13 +22,20 @@ namespace mizu {
 			out |= fp_view_data(char, label)[i] << (i * 8);
 		return out;
 	}
-	constexpr uint32_t label2int(const fp_string label) { return label2int(fp_string_to_view_const(label)); }
+	/**
+	 * Converts a string label to an immediate value
+	 * @note Only the first 4 characters of the label are relevant.
+	 * 
+	 * @param label string to be converted
+	 * @return constexpr uint32_t the immediate
+	 */
+	constexpr uint32_t label2immediate(const fp_string label) { return label2immediate(fp_string_to_view_const(label)); }
 
-	inline namespace operations { extern "C" {
+	inline namespace instructions { extern "C" {
 		/**
-		 * Creates a label
+		 * Noop which marks a label that can be found using mizu::find_label and then jumped to using mizu::jump_to
 		 * @param immediate Integer label value
-		 * @note label2int can convert a string into an immediate for this function
+		 * @note mizu::label2int can convert a string into an immediate for this function
 		 */
 		void* label(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
@@ -31,8 +45,17 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(label);
+		MIZU_REGISTER_INSTRUCTION(label);
 
+		/**
+		 * Finds the provided label and stores a pointer to it in \p out
+		 * @param out register to store the label pointer in
+		 * @param immediate the label to search for
+		 * @note Unlike every other assembly this is a runtime function, time is spent scanning the program to find the label.
+		 *	It is this recommended to cluster these instructions near the beginning of the program where they won't be executed multiple times.
+		 * @note This function first searches below it in the program then searches above it if the label can't be found. 
+		 *	The closest matching label following these rules will be found if there is any ambiguity.
+		 */
 		void* find_label(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -55,8 +78,11 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(find_label);
+		MIZU_REGISTER_INSTRUCTION(find_label);
 
+		/**
+		 * Ends execution of the program or thread.
+		 */
 		void* halt(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -68,8 +94,12 @@ namespace mizu {
 #else // MIZU_IMPLEMENTATION
 		;
 #endif
-		MIZU_REGISTER_OPERATION(halt);
+		MIZU_REGISTER_INSTRUCTION(halt);
 
+		/**
+		 * Prints the value stored in a register in several formats
+		 * @param a the register to print the value of
+		 */
 		void* debug_print(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -80,8 +110,12 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(debug_print);
+		MIZU_REGISTER_INSTRUCTION(debug_print);
 
+		/**
+		 * Prints the value stored in a register in several formats including binary
+		 * @param a the register to print the value of
+		 */
 		void* debug_print_binary(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -103,8 +137,14 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(debug_print_binary);
+		MIZU_REGISTER_INSTRUCTION(debug_print_binary);
 
+		/**
+		 * Stores an immediate value into a register
+		 * @param out the register to update
+		 * @param immediate the value to store in \p out
+		 * @note Since immediate are only 32bit numbers this function sets the bottom 32 bits of our 64 bit registers.
+		 */
 		void* load_immediate(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -114,8 +154,14 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(load_immediate);
+		MIZU_REGISTER_INSTRUCTION(load_immediate);
 
+		/**
+		 * Stores an immediate value into a register shifting it so that its content fills the upper 32bits.
+		 * @param out the register to update
+		 * @param immediate the value to store in \p out
+		 * @warning The load immediate instruction overwrites the entire register, thus it should be called before load_upper_immediate!
+		 */
 		void* load_upper_immediate(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -125,8 +171,13 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(load_upper_immediate);
+		MIZU_REGISTER_INSTRUCTION(load_upper_immediate);
 
+		/**
+		 * Converts a register to a 64 bit integer.
+		 * @param out register to store the result in
+		 * @param a register whose value to convert
+		 */
 		void* convert_to_u64(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -136,7 +187,7 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(convert_to_u64);
+		MIZU_REGISTER_INSTRUCTION(convert_to_u64);
 
 // 		void* convert_to_i64(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 // #ifdef MIZU_IMPLEMENTATION
@@ -147,8 +198,13 @@ namespace mizu {
 // #else
 // 		;
 // #endif
-//		MIZU_REGISTER_OPERATION(convert_to_i64);
+//		MIZU_REGISTER_INSTRUCTION(convert_to_i64);
 
+		/**
+		 * Converts a register to a 32 bit integer.
+		 * @param out register to store the result in
+		 * @param a register whose value to convert
+		 */
 		void* convert_to_u32(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -158,7 +214,7 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(convert_to_u32);
+		MIZU_REGISTER_INSTRUCTION(convert_to_u32);
 
 // 		void* convert_to_i32(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 // #ifdef MIZU_IMPLEMENTATION
@@ -169,8 +225,13 @@ namespace mizu {
 // #else
 // 		;
 // #endif
-//		MIZU_REGISTER_OPERATION(convert_to_i32);
+//		MIZU_REGISTER_INSTRUCTION(convert_to_i32);
 
+		/**
+		 * Converts a register to a 16 bit integer.
+		 * @param out register to store the result in
+		 * @param a register whose value to convert
+		 */
 		void* convert_to_u16(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -180,7 +241,7 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(convert_to_u16);
+		MIZU_REGISTER_INSTRUCTION(convert_to_u16);
 
 // 		void* convert_to_i16(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 // #ifdef MIZU_IMPLEMENTATION
@@ -191,8 +252,13 @@ namespace mizu {
 // #else
 // 		;
 // #endif
-//		MIZU_REGISTER_OPERATION(convert_to_i16);
+//		MIZU_REGISTER_INSTRUCTION(convert_to_i16);
 
+		/**
+		 * Converts a register to an 8 bit integer.
+		 * @param out register to store the result in
+		 * @param a register whose value to convert
+		 */
 		void* convert_to_u8(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -202,19 +268,13 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(convert_to_u8);
+		MIZU_REGISTER_INSTRUCTION(convert_to_u8);
 
-// 		void* convert_to_i8(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
-// #ifdef MIZU_IMPLEMENTATION
-// 		{
-// 			*(int8_t*)&registers[pc->out] = registers[pc->a];
-// 			MIZU_NEXT();
-// 		}
-// #else
-// 		;
-// #endif
-//		MIZU_REGISTER_OPERATION(convert_to_i8);
-
+		/**
+		 * Loads a 64 bit integer from the stack
+		 * @param out register to store the result in
+		 * @param a register storing an offset to the current stack pointer (defaults to zero bytes)
+		 */
 		void* stack_load_u64(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -227,19 +287,14 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(stack_load_u64);
+		MIZU_REGISTER_INSTRUCTION(stack_load_u64);
 
-// 		void* stack_load_i64(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
-// #ifdef MIZU_IMPLEMENTATION
-// 		{
-// 			registers[pc->out] = *(int64_t*)(sp + registers[pc->a]);
-// 			MIZU_NEXT();
-// 		}
-// #else
-// 		;
-// #endif
-//		MIZU_REGISTER_OPERATION(stack_load_i64);
-
+		/**
+		 * Copies a 64 bit integer from a register to the stack.
+		 * @param out register to store another copy in
+		 * @param a register storing the value to copy
+		 * @param b register storing an offset to the current stack pointer (defaults to zero bytes)
+		 */
 		void* stack_store_u64(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -252,19 +307,13 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(stack_store_u64);
+		MIZU_REGISTER_INSTRUCTION(stack_store_u64);
 
-// 		void* stack_store_i64(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
-// #ifdef MIZU_IMPLEMENTATION
-// 		{
-// 			registers[pc->out] = *(uint64_t*)(sp + registers[pc->a]) = *(uint64_t*)&registers[pc->b];
-// 			MIZU_NEXT();
-// 		}
-// #else
-// 		;
-// #endif
-//		MIZU_REGISTER_OPERATION(stack_store_i64);
-
+		/**
+		 * Loads a 32 bit integer from the stack
+		 * @param out register to store the result in
+		 * @param a register storing an offset to the current stack pointer (defaults to zero bytes)
+		 */
 		void* stack_load_u32(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -277,19 +326,14 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(stack_load_u32);
+		MIZU_REGISTER_INSTRUCTION(stack_load_u32);
 
-// 		void* stack_load_i32(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
-// #ifdef MIZU_IMPLEMENTATION
-// 		{
-// 			registers[pc->out] = *(int32_t*)(sp + registers[pc->a]);
-// 			MIZU_NEXT();
-// 		}
-// #else
-// 		;
-// #endif
-//		MIZU_REGISTER_OPERATION(stack_load_i32);
-
+		/**
+		 * Copies a 32 bit integer from a register to the stack.
+		 * @param out register to store another copy in
+		 * @param a register storing the value to copy
+		 * @param b register storing an offset to the current stack pointer (defaults to zero bytes)
+		 */
 		void* stack_store_u32(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -302,19 +346,13 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(stack_store_u32);
+		MIZU_REGISTER_INSTRUCTION(stack_store_u32);
 
-// 		void* stack_store_i32(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
-// #ifdef MIZU_IMPLEMENTATION
-// 		{
-// 			registers[pc->out] = *(uint32_t*)(sp + registers[pc->a]) = *(uint32_t*)&registers[pc->b];
-// 			MIZU_NEXT();
-// 		}
-// #else
-// 		;
-// #endif
-//		MIZU_REGISTER_OPERATION(stack_store_i32);
-
+		/**
+		 * Loads a 16 bit integer from the stack
+		 * @param out register to store the result in
+		 * @param a register storing an offset to the current stack pointer (defaults to zero bytes)
+		 */
 		void* stack_load_u16(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -327,19 +365,14 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(stack_load_u16);
+		MIZU_REGISTER_INSTRUCTION(stack_load_u16);
 
-// 		void* stack_load_i16(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
-// #ifdef MIZU_IMPLEMENTATION
-// 		{
-// 			registers[pc->out] = *(int16_t*)(sp + registers[pc->a]);
-// 			MIZU_NEXT();
-// 		}
-// #else
-// 		;
-// #endif
-//		MIZU_REGISTER_OPERATION(stack_load_i16);
-
+		/**
+		 * Copies a 16 bit integer from a register to the stack.
+		 * @param out register to store another copy in
+		 * @param a register storing the value to copy
+		 * @param b register storing an offset to the current stack pointer (defaults to zero bytes)
+		 */
 		void* stack_store_u16(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -352,19 +385,13 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(stack_store_u16);
+		MIZU_REGISTER_INSTRUCTION(stack_store_u16);
 
-// 		void* stack_store_i16(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
-// #ifdef MIZU_IMPLEMENTATION
-// 		{
-// 			registers[pc->out] = *(uint16_t*)(sp + registers[pc->a]) = *(uint16_t*)&registers[pc->b];
-// 			MIZU_NEXT();
-// 		}
-// #else
-// 		;
-// #endif
-		// MIZU_REGISTER_OPERATION(stack_store_i16);
-
+		/**
+		 * Loads an 8 bit integer from the stack
+		 * @param out register to store the result in
+		 * @param a register storing an offset to the current stack pointer (defaults to zero bytes)
+		 */
 		void* stack_load_u8(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -377,19 +404,14 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(stack_load_u8);
+		MIZU_REGISTER_INSTRUCTION(stack_load_u8);
 
-// 		void* stack_load_i8(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
-// #ifdef MIZU_IMPLEMENTATION
-// 		{
-// 			registers[pc->out] = *(int8_t*)(sp + registers[pc->a]);
-// 			MIZU_NEXT();
-// 		}
-// #else
-// 		;
-// #endif
-//		MIZU_REGISTER_OPERATION(stack_load_i8);
-
+		/**
+		 * Copies a 8 bit integer from a register to the stack.
+		 * @param out register to store another copy in
+		 * @param a register storing the value to copy
+		 * @param b register storing an offset to the current stack pointer (defaults to zero bytes)
+		 */
 		void* stack_store_u8(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -402,19 +424,12 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(stack_store_u8);
+		MIZU_REGISTER_INSTRUCTION(stack_store_u8);
 
-// 		void* stack_store_i8(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
-// #ifdef MIZU_IMPLEMENTATION
-// 		{
-// 			registers[pc->out] = *(uint8_t*)(sp + registers[pc->a]) = *(uint8_t*)&registers[pc->b];
-// 			MIZU_NEXT();
-// 		}
-// #else
-// 		;
-// #endif
-//		MIZU_REGISTER_OPERATION(stack_store_i8);
-
+		/**
+		 * Subtracts a value from the stack pointer. In other words reserves some additional memory on the stack.
+		 * @param a register storing how many bytes to reserve
+		 */
 		void* stack_push(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -426,8 +441,12 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(stack_push);
+		MIZU_REGISTER_INSTRUCTION(stack_push);
 
+		/**
+		 * Subtracts a value from the stack pointer. In other words reserves some additional memory on the stack.
+		 * @param immediate how many bytes to reserve
+		 */
 		void* stack_push_immediate(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -440,8 +459,12 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(stack_push_immediate);
+		MIZU_REGISTER_INSTRUCTION(stack_push_immediate);
 
+		/**
+		 * Adds a value to stack pointer. In other words releases reserved memory on the stack.
+		 * @param a register storing how many bytes to release
+		 */
 		void* stack_pop(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -453,8 +476,12 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(stack_pop);
+		MIZU_REGISTER_INSTRUCTION(stack_pop);
 
+		/**
+		 * Adds a value to stack pointer. In other words releases reserved memory on the stack.
+		 * @param immediate how many bytes to release
+		 */
 		void* stack_pop_immediate(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -467,9 +494,15 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(stack_pop_immediate);
+		MIZU_REGISTER_INSTRUCTION(stack_pop_immediate);
 
-		// Interpret register as signed
+		/**
+		 * Moves the program counter by an offset. If the offset is zero this instruction is executed again. If it is one the next instruction is executed as usual.
+		 *	If it is negative a previous instruction is executed.
+		 * @param out register to store the address of the instruction that should be executed next.
+		 * @param a register storing how many instructions to jump
+		 * @note \p a is interpreted as a signed integer, allowing for negative jumps
+		 */
 		void* jump_relative(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -481,9 +514,15 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(jump_relative);
+		MIZU_REGISTER_INSTRUCTION(jump_relative);
 
-		// Interpret arguments as signed
+		/**
+		 * Moves the program counter by an offset. If the offset is zero this instruction is executed again. If it is one the next instruction is executed as usual.
+		 *	If it is negative a previous instruction is executed.
+		 * @param out register to store the address of the instruction that should be executed next.
+		 * @param immediate how many instructions to jump
+		 * @note \p immediate is interpreted as a signed integer, allowing for negative jumps
+		 */
 		void* jump_relative_immediate(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -494,8 +533,13 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(jump_relative_immediate);
+		MIZU_REGISTER_INSTRUCTION(jump_relative_immediate);
 
+		/**
+		 * Sets the program counter to a value (usually the output of another jump)
+		 * @param out register to store the address of the instruction that should be executed next.
+		 * @param a register storing the address of the instruction to jump to.
+		 */
 		void* jump_to(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -506,9 +550,15 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(jump_to);
+		MIZU_REGISTER_INSTRUCTION(jump_to);
 
-		// Interpret register as signed
+		/**
+		 * Moves the program counter by an offset similar to a jump, however only does so if the condition register is not zero
+		 * @param out register to store the address of the instruction that should be executed next.
+		 * @param a register storing a condition, zero indicates no jump while any other number indicates that a jump should occur
+		 * @param b register storing how many instructions to jump
+		 * @note \p b is interpreted as a signed integer, allowing for negative jumps
+		 */
 		void* branch_relative(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -520,9 +570,15 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(branch_relative);
+		MIZU_REGISTER_INSTRUCTION(branch_relative);
 
-		// Interpret arguments as signed
+		/**
+		 * Moves the program counter by an offset similar to a jump, however only does so if the condition register is not zero
+		 * @param out register to store the address of the instruction that should be executed next.
+		 * @param a register storing a condition, zero indicates no jump while any other number indicates that a jump should occur
+		 * @param b (branch immediate) how many instructions to jump
+		 * @note \p b is interpreted as a signed integer, allowing for negative jumps
+		 */
 		void* branch_relative_immediate(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -534,8 +590,14 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(branch_relative_immediate);
+		MIZU_REGISTER_INSTRUCTION(branch_relative_immediate);
 
+		/**
+		 * Sets the program counter to a value (usually the output of another jump), however only does so if the condition register is not zero
+		 * @param out register to store the address of the instruction that should be executed next.
+		 * @param a register storing a condition, zero indicates no jump while any other number indicates that a jump should occur
+		 * @param b register storing the address of the instruction to jump to.
+		 */
 		void* branch_to(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -547,8 +609,14 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(branch_to);
+		MIZU_REGISTER_INSTRUCTION(branch_to);
 
+		/**
+		 * Checks if two registers are equal
+		 * @param out register to be set to one if \p a == \p b or zero otherwise
+		 * @param a register storing the first value to compare
+		 * @param b register storing the second value to compare
+		 */
 		void* set_if_equal(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -558,8 +626,14 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(set_if_equal);
+		MIZU_REGISTER_INSTRUCTION(set_if_equal);
 
+		/**
+		 * Checks if two registers are not equal
+		 * @param out register to be set to one if \p a != \p b or zero otherwise
+		 * @param a register storing the first value to compare
+		 * @param b register storing the second value to compare
+		 */
 		void* set_if_not_equal(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -569,8 +643,14 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(set_if_not_equal);
+		MIZU_REGISTER_INSTRUCTION(set_if_not_equal);
 
+		/**
+		 * Checks if a register is less than another
+		 * @param out register to be set to one if \p a < \p b or zero otherwise
+		 * @param a register storing the first value to compare
+		 * @param b register storing the second value to compare
+		 */
 		void* set_if_less(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -580,8 +660,15 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(set_if_less);
+		MIZU_REGISTER_INSTRUCTION(set_if_less);
 
+		/**
+		 * Checks if a register is less than another
+		 * @param out register to be set to one if \p a == \p b or zero otherwise
+		 * @param a register storing the first value to compare
+		 * @param b register storing the second value to compare
+		 * @note Both \p a and \p b are treated as being signed
+		 */
 		void* set_if_less_signed(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -591,8 +678,14 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(set_if_less_signed);
+		MIZU_REGISTER_INSTRUCTION(set_if_less_signed);
 
+		/**
+		 * Checks if a register is greater or equal to another
+		 * @param out register to be set to one if \p a >= \p b or zero otherwise
+		 * @param a register storing the first value to compare
+		 * @param b register storing the second value to compare
+		 */
 		void* set_if_greater_equal(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -602,8 +695,15 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(set_if_greater_equal);
+		MIZU_REGISTER_INSTRUCTION(set_if_greater_equal);
 
+		/**
+		 * Checks if a register is greater or equal to another
+		 * @param out register to be set to one if \p a >= \p b or zero otherwise
+		 * @param a register storing the first value to compare
+		 * @param b register storing the second value to compare
+		 * @note Both \p a and \p b are treated as being signed
+		 */
 		void* set_if_greater_equal_signed(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -613,8 +713,14 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(set_if_greater_equal_signed);
+		MIZU_REGISTER_INSTRUCTION(set_if_greater_equal_signed);
 
+		/**
+		 * Adds two numbers
+		 * @param out register to store \p a + \p b in
+		 * @param a register storing first value
+		 * @param b register storing second value
+		 */
 		void* add(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -624,8 +730,14 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(add);
+		MIZU_REGISTER_INSTRUCTION(add);
 
+		/**
+		 * Subtracts two numbers
+		 * @param out register to store \p a - \p b in
+		 * @param a register storing first value
+		 * @param b register storing second value
+		 */
 		void* subtract(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -635,8 +747,14 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(subtract);
+		MIZU_REGISTER_INSTRUCTION(subtract);
 
+		/**
+		 * Multiplies two numbers
+		 * @param out register to store \p a * \p b in
+		 * @param a register storing first value
+		 * @param b register storing second value
+		 */
 		void* multiply(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -646,8 +764,14 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(multiply);
+		MIZU_REGISTER_INSTRUCTION(multiply);
 
+		/**
+		 * Divides two numbers
+		 * @param out register to store \p a / \p b in
+		 * @param a register storing first value
+		 * @param b register storing second value
+		 */
 		void* divide(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -657,8 +781,14 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(divide);
+		MIZU_REGISTER_INSTRUCTION(divide);
 
+		/**
+		 * Finds the remainder of the division of two numbers
+		 * @param out register to store \p a % \p b in
+		 * @param a register storing first value
+		 * @param b register storing second value
+		 */
 		void* modulus(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -668,8 +798,14 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(modulus);
+		MIZU_REGISTER_INSTRUCTION(modulus);
 
+		/**
+		 * Shifts one number left by another
+		 * @param out register to store \p a << \p b in
+		 * @param a register storing first value
+		 * @param b register storing second value
+		 */
 		void* shift_left(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -679,8 +815,14 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(shift_left);
+		MIZU_REGISTER_INSTRUCTION(shift_left);
 
+		/**
+		 * Shifts one number right by another
+		 * @param out register to store \p a >> \p b in
+		 * @param a register storing first value
+		 * @param b register storing second value
+		 */
 		void* shift_right_logical(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -690,8 +832,14 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(shift_right_logical);
+		MIZU_REGISTER_INSTRUCTION(shift_right_logical);
 
+		/**
+		 * Shifts one number right by another, sign extending it
+		 * @param out register to store \p a >> \p b in
+		 * @param a register storing first value
+		 * @param b register storing second value
+		 */
 		void* shift_right_arithmetic(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -701,8 +849,14 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(shift_right_arithmetic);
+		MIZU_REGISTER_INSTRUCTION(shift_right_arithmetic);
 
+		/**
+		 * Xor's two numbers
+		 * @param out register to store \p a ^ \p b in
+		 * @param a register storing first value
+		 * @param b register storing second value
+		 */
 		void* bitwise_xor(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -712,8 +866,14 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(bitwise_xor);
+		MIZU_REGISTER_INSTRUCTION(bitwise_xor);
 
+		/**
+		 * And's two numbers
+		 * @param out register to store \p a & \p b in
+		 * @param a register storing first value
+		 * @param b register storing second value
+		 */
 		void* bitwise_and(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -723,8 +883,14 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(bitwise_and);
+		MIZU_REGISTER_INSTRUCTION(bitwise_and);
 
+		/**
+		 * Or's two numbers
+		 * @param out register to store \p a | \p b in
+		 * @param a register storing first value
+		 * @param b register storing second value
+		 */
 		void* bitwise_or(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 #ifdef MIZU_IMPLEMENTATION
 		{
@@ -734,6 +900,6 @@ namespace mizu {
 #else
 		;
 #endif
-		MIZU_REGISTER_OPERATION(bitwise_or);
+		MIZU_REGISTER_INSTRUCTION(bitwise_or);
 	}}
 }

@@ -69,7 +69,7 @@
 			;
 	#endif // MIZU_IMPLEMENTATION
 
-		inline namespace operations { extern "C" {
+		inline namespace instructions { extern "C" {
 
 			void* push_type_void(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -84,7 +84,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_OPERATION(push_type_void);
+			MIZU_REGISTER_INSTRUCTION(push_type_void);
 
 			void* push_type_pointer(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -102,7 +102,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_OPERATION(push_type_pointer);
+			MIZU_REGISTER_INSTRUCTION(push_type_pointer);
 
 			void* push_type_i32(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -117,7 +117,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_OPERATION(push_type_i32);
+			MIZU_REGISTER_INSTRUCTION(push_type_i32);
 
 			void* push_type_u32(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -132,7 +132,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_OPERATION(push_type_u32);
+			MIZU_REGISTER_INSTRUCTION(push_type_u32);
 
 			void* push_type_i64(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -147,7 +147,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_OPERATION(push_type_i64);
+			MIZU_REGISTER_INSTRUCTION(push_type_i64);
 
 			void* push_type_u64(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -162,7 +162,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_OPERATION(push_type_u64);
+			MIZU_REGISTER_INSTRUCTION(push_type_u64);
 
 			void* push_type_f32(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -177,7 +177,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_OPERATION(push_type_f32);
+			MIZU_REGISTER_INSTRUCTION(push_type_f32);
 
 			void* push_type_f64(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -192,7 +192,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_OPERATION(push_type_f64);
+			MIZU_REGISTER_INSTRUCTION(push_type_f64);
 
 			void* create_interface(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -214,7 +214,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_OPERATION(create_interface);
+			MIZU_REGISTER_INSTRUCTION(create_interface);
 
 			void* call(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -224,7 +224,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_OPERATION(call);
+			MIZU_REGISTER_INSTRUCTION(call);
 
 			void* call_with_return(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -234,7 +234,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_OPERATION(call_with_return);
+			MIZU_REGISTER_INSTRUCTION(call_with_return);
 
 			void* load_library(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -254,7 +254,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_OPERATION(load_library);
+			MIZU_REGISTER_INSTRUCTION(load_library);
 
 			void* load_library_function(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -271,7 +271,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_OPERATION(load_library_function);
+			MIZU_REGISTER_INSTRUCTION(load_library_function);
 		}}
 	}
 
