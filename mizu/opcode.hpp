@@ -66,17 +66,17 @@ namespace mizu {
 		 * @param i The temporary register's index
 		 * @return constexpr reg_t associated value to store in an opcode
 		 */
-		constexpr reg_t t(std::size_t i) { return i + 1; assert(i <= 10); }
+		constexpr reg_t t(std::size_t i) { return i + 1; assert(i <= 20); }
 		/**
 		 * Argument register lookup
 		 *
 		 * @param i The argument register's index
 		 * @return constexpr reg_t associated value to store in an opcode
 		 */
-		constexpr reg_t a(std::size_t i) { return i + 12; }
+		constexpr reg_t a(std::size_t i) { return i + 22; }
 
 		constexpr static reg_t zero = x(0);
-		constexpr static reg_t return_address = x(11), ra = return_address;
+		constexpr static reg_t return_address = x(21), ra = return_address;
 	}
 	using instruction_t = void*(*)(struct opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp);
 

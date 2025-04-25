@@ -7,3 +7,6 @@
 [submodule "thirdparty/libfp"]
 	path = thirdparty/libfp
 	url = https://github.com/joshuadahlunr/libfp
+[submodule "thirdparty/libsimd"]
+	path = thirdparty/libsimd
+	url = https://github.com/joshuadahlunr/libsimd
