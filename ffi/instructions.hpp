@@ -33,7 +33,7 @@
 			auto func = FFI_FN(registers[pc->a]);
 			auto interface_ = (ffi_cif*)registers[pc->b];
 
-			fp::dynarray<void*> args; args.reserve(interface_->nargs);
+			fp::raii::dynarray<void*> args; args.reserve(interface_->nargs);
 			for(size_t i = 0; i < interface_->nargs; ++i)
 				args.push_back(&registers[registers::a(i)]);
 
@@ -63,6 +63,7 @@
 					reg = *(uint64_t*)&v;
 			}, res);
 	#endif
+			auto dbg = registers[pc->out];
 			MIZU_NEXT();
 		}
 	#else // MIZU_IMPLEMENTATION
@@ -84,7 +85,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(push_type_void);
+			MIZU_REGISTER_INSTRUCTION(ffi::push_type_void);
 
 			void* push_type_pointer(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -102,7 +103,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(push_type_pointer);
+			MIZU_REGISTER_INSTRUCTION(ffi::push_type_pointer);
 
 			void* push_type_i32(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -117,7 +118,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(push_type_i32);
+			MIZU_REGISTER_INSTRUCTION(ffi::push_type_i32);
 
 			void* push_type_u32(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -132,7 +133,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(push_type_u32);
+			MIZU_REGISTER_INSTRUCTION(ffi::push_type_u32);
 
 			void* push_type_i64(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -147,7 +148,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(push_type_i64);
+			MIZU_REGISTER_INSTRUCTION(ffi::push_type_i64);
 
 			void* push_type_u64(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -162,7 +163,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(push_type_u64);
+			MIZU_REGISTER_INSTRUCTION(ffi::push_type_u64);
 
 			void* push_type_f32(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -177,7 +178,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(push_type_f32);
+			MIZU_REGISTER_INSTRUCTION(ffi::push_type_f32);
 
 			void* push_type_f64(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -192,29 +193,60 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(push_type_f64);
+			MIZU_REGISTER_INSTRUCTION(ffi::push_type_f64);
 
-			void* create_interface(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+			void* clear_type_stack(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
 			{
-	#ifndef MIZU_NO_LIB_FFI
-				auto interface_ = (ffi_cif*)(registers[pc->out] = (size_t)new ffi_cif{});
-
-				ffi_status status = ffi_prep_cif(interface_, FFI_DEFAULT_ABI, current_types.size() - 1, current_types[0], current_types.data() + 1);
-				if (status != FFI_OK) MIZU_THROW(std::runtime_error("ffi_prep_cif failed: " + std::to_string(status)));
-	#else
-				if(current_types.empty()) MIZU_THROW(std::runtime_error("Function interfaces must at least specify the return type!"));
-				if(current_types.size() > 5) MIZU_THROW(std::runtime_error("The WASM Trampoline currently only supports functions with a maximum of 4 arguments!"));
-				registers[pc->out] = (size_t)current_types.clone();
-	#endif
-
 				current_types.clear();
 				MIZU_NEXT();
 			}
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(create_interface);
+			MIZU_REGISTER_INSTRUCTION(ffi::clear_type_stack);
+
+			void* create_interface(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+	#ifdef MIZU_IMPLEMENTATION
+			{
+	#ifndef MIZU_NO_LIB_FFI
+				auto interface_ = (ffi_cif*)(registers[pc->out] = (size_t)new ffi_cif{});
+				fp::dynarray<ffi_type*> interface_types = current_types.clone().release();
+
+				ffi_status status = ffi_prep_cif(interface_, FFI_DEFAULT_ABI, interface_types.size() - 1, interface_types[0], interface_types.data() + 1);
+				if (status != FFI_OK) MIZU_THROW(std::runtime_error("ffi_prep_cif failed: " + std::to_string(status)));
+	#else
+				if(current_types.empty()) MIZU_THROW(std::runtime_error("Function interfaces must at least specify the return type!"));
+				if(current_types.size() > 5) MIZU_THROW(std::runtime_error("The WASM Trampoline currently only supports functions with a maximum of 4 arguments!"));
+				registers[pc->out] = (size_t)current_types.clone();
+	#endif
+				return clear_type_stack(pc, registers, stack_boundary, sp);
+			}
+	#else // MIZU_IMPLEMENTATION
+			;
+	#endif // MIZU_IMPLEMENTATION
+			MIZU_REGISTER_INSTRUCTION(ffi::create_interface);
+
+			void* free_interface(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
+	#ifdef MIZU_IMPLEMENTATION
+			{
+	#ifndef MIZU_NO_LIB_FFI
+				auto interface_ = (ffi_cif*)registers[pc->a];
+				if(!interface_) MIZU_THROW(std::runtime_error("FFI Interface does not exist!"));
+				fpda_free(interface_->arg_types - 1);
+				delete interface_;
+	#else
+	
+				auto interface_ = (wasm::types*)registers[pc->a];
+				if(!interface_) MIZU_THROW(std::runtime_error("FFI Interface does not exist!"));
+				fpda_free(interface_);
+	#endif
+				MIZU_NEXT();
+			}
+	#else // MIZU_IMPLEMENTATION
+			;
+	#endif // MIZU_IMPLEMENTATION
+			MIZU_REGISTER_INSTRUCTION(ffi::free_interface);
 
 			void* call(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -224,7 +256,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(call);
+			MIZU_REGISTER_INSTRUCTION(ffi::call);
 
 			void* call_with_return(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -234,7 +266,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(call_with_return);
+			MIZU_REGISTER_INSTRUCTION(ffi::call_with_return);
 
 			void* load_library(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -254,7 +286,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(load_library);
+			MIZU_REGISTER_INSTRUCTION(ffi::load_library);
 
 			void* load_library_function(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -271,7 +303,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(load_library_function);
+			MIZU_REGISTER_INSTRUCTION(ffi::load_library_function);
 		}}
 	}
 
