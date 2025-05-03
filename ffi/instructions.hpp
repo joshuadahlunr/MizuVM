@@ -15,7 +15,8 @@
 	#endif
 
 
-	namespace mizu::ffi {
+	namespace mizu {
+		namespace ffi {
 	#ifdef MIZU_IMPLEMENTATION
 		#ifndef MIZU_NO_LIB_FFI
 			static thread_local fp::raii::dynarray<ffi_type*> current_types = {};
@@ -85,7 +86,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(ffi::push_type_void);
+			MIZU_REGISTER_INSTRUCTION_PROTOTYPE(push_type_void);
 
 			void* push_type_pointer(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -103,7 +104,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(ffi::push_type_pointer);
+			MIZU_REGISTER_INSTRUCTION_PROTOTYPE(push_type_pointer);
 
 			void* push_type_i32(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -118,7 +119,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(ffi::push_type_i32);
+			MIZU_REGISTER_INSTRUCTION_PROTOTYPE(push_type_i32);
 
 			void* push_type_u32(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -133,7 +134,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(ffi::push_type_u32);
+			MIZU_REGISTER_INSTRUCTION_PROTOTYPE(push_type_u32);
 
 			void* push_type_i64(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -148,7 +149,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(ffi::push_type_i64);
+			MIZU_REGISTER_INSTRUCTION_PROTOTYPE(push_type_i64);
 
 			void* push_type_u64(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -163,7 +164,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(ffi::push_type_u64);
+			MIZU_REGISTER_INSTRUCTION_PROTOTYPE(push_type_u64);
 
 			void* push_type_f32(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -178,7 +179,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(ffi::push_type_f32);
+			MIZU_REGISTER_INSTRUCTION_PROTOTYPE(push_type_f32);
 
 			void* push_type_f64(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -193,7 +194,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(ffi::push_type_f64);
+			MIZU_REGISTER_INSTRUCTION_PROTOTYPE(push_type_f64);
 
 			void* clear_type_stack(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -204,7 +205,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(ffi::clear_type_stack);
+			MIZU_REGISTER_INSTRUCTION_PROTOTYPE(clear_type_stack);
 
 			void* create_interface(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -225,7 +226,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(ffi::create_interface);
+			MIZU_REGISTER_INSTRUCTION_PROTOTYPE(create_interface);
 
 			void* free_interface(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -246,7 +247,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(ffi::free_interface);
+			MIZU_REGISTER_INSTRUCTION_PROTOTYPE(free_interface);
 
 			void* call(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -256,7 +257,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(ffi::call);
+			MIZU_REGISTER_INSTRUCTION_PROTOTYPE(call);
 
 			void* call_with_return(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -266,7 +267,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(ffi::call_with_return);
+			MIZU_REGISTER_INSTRUCTION_PROTOTYPE(call_with_return);
 
 			void* load_library(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -286,7 +287,7 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(ffi::load_library);
+			MIZU_REGISTER_INSTRUCTION_PROTOTYPE(load_library);
 
 			void* load_library_function(opcode* pc, uint64_t* registers, uint8_t* stack_boundary, uint8_t* sp)
 	#ifdef MIZU_IMPLEMENTATION
@@ -303,8 +304,24 @@
 	#else // MIZU_IMPLEMENTATION
 			;
 	#endif // MIZU_IMPLEMENTATION
-			MIZU_REGISTER_INSTRUCTION(ffi::load_library_function);
-		}}
+			MIZU_REGISTER_INSTRUCTION_PROTOTYPE(load_library_function);
+		}}}
+
+		MIZU_REGISTER_INSTRUCTION(ffi::push_type_void);
+		MIZU_REGISTER_INSTRUCTION(ffi::push_type_pointer);
+		MIZU_REGISTER_INSTRUCTION(ffi::push_type_i32);
+		MIZU_REGISTER_INSTRUCTION(ffi::push_type_u32);
+		MIZU_REGISTER_INSTRUCTION(ffi::push_type_i64);
+		MIZU_REGISTER_INSTRUCTION(ffi::push_type_u64);
+		MIZU_REGISTER_INSTRUCTION(ffi::push_type_f32);
+		MIZU_REGISTER_INSTRUCTION(ffi::push_type_f64);
+		MIZU_REGISTER_INSTRUCTION(ffi::clear_type_stack);
+		MIZU_REGISTER_INSTRUCTION(ffi::create_interface);
+		MIZU_REGISTER_INSTRUCTION(ffi::free_interface);
+		MIZU_REGISTER_INSTRUCTION(ffi::call);
+		MIZU_REGISTER_INSTRUCTION(ffi::call_with_return);
+		MIZU_REGISTER_INSTRUCTION(ffi::load_library);
+		MIZU_REGISTER_INSTRUCTION(ffi::load_library_function);
 	}
 
 #endif // MIZU_NO_FFI
