@@ -135,6 +135,17 @@ Floating Point Instructions
 .. doxygenfile:: instructions/f64.hpp
 	:project: mizu_doxygen
 
+SIMD Instructions
+----------
+
+Please note that the FFI instructions aren't included in the default mizu/instructions header. To include them please add:
+.. code:: c++
+	
+	#include <instructions/simd.hpp>
+
+.. doxygenfile:: instructions/simd.hpp
+	:project: mizu_doxygen
+
 FFI Instructions
 ----------
 
